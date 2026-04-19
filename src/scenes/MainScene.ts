@@ -1,10 +1,15 @@
 import * as Phaser from "phaser";
+import { Deck } from "../entities/Deck";
+import { Card } from "../entities/Card";
 
 /**
  * Главная игровая сцена
  * Здесь будет отображаться пирамида карт и управление игрой
  */
 export class MainScene extends Phaser.Scene {
+  private deck!: Deck;
+  private pyramidCards: Card[] = [];
+
   constructor() {
     super({ key: "MainScene" });
   }
@@ -42,12 +47,56 @@ export class MainScene extends Phaser.Scene {
       graphics.lineBetween(x, 0, x, height);
     }
 
+    // ========== ТЕСТИРОВАНИЕ МОДЕЛИ ДАННЫХ ==========
+    // Создаём и перемешиваем колоду
+    this.deck = new Deck();
+    this.deck.shuffle();
+
+    console.log("=== ТЕСТИРОВАНИЕ МОДЕЛИ ДАННЫХ ===");
+    console.log(`Всего карт в колоде: ${this.deck.getAllCards().length}`);
+
+    // Берём карты для пирамиды
+    this.pyramidCards = this.deck.getPyramidCards();
+    console.log(`Карт в пирамиде: ${this.pyramidCards.length}`);
+
+    // Показываем первые 5 карт пирамиды в консоли
+    console.log("Первые 5 карт пирамиды:");
+    this.pyramidCards.slice(0, 5).forEach((card, idx) => {
+      console.log(` ${idx + 1}. ${card.toString()} (значение: ${card.value})`);
+    });
+
+    // Проверяем колоду запаса
+    const stockCards = this.deck.getStockCards();
+    console.log(`Карт в колоде запаса: ${stockCards.length}`);
+
+    // Тестируем поиск пар
+    if (this.pyramidCards.length >= 2) {
+      const card1 = this.pyramidCards[0];
+      const card2 = this.pyramidCards[1];
+      console.log(
+        `Могут ли ${card1.toString()} и ${card2.toString()} образовать пару? ${card1.canPairWith(card2)}`,
+      );
+      console.log(
+        ` ${card1.value} + ${card2.value} = ${card1.value + card2.value}`,
+      );
+    }
+
+    // Находим всех Королей в пирамиде
+    const kings = this.pyramidCards.filter((c) => c.isKing());
+    console.log(`Королей в пирамиде: ${kings.length}`);
+    kings.forEach((k) => console.log(`  Король: ${k.toString()}`));
+
+    // ========== КОНЕЦ ТЕСТИРОВАНИЯ ==========
+
     // 3. Добавляем заглушку - текст, чтобы убедиться, что сцена работает
     const debugText = this.add
       .text(
         width / 2,
         height / 2,
-        'Аида — пасьянс "Пирамида"\nСкоро здесь будут карты...',
+        `Аида — пасьянс "Пирамида"\n` +
+          `Карт в пирамиде: ${this.pyramidCards.length}\n` +
+          `Королей: ${kings.length}\n` +
+          `Откройте консоль (F12) для деталей`,
         {
           fontFamily: "Arial, sans-serif",
           fontSize: "24px",
@@ -71,7 +120,7 @@ export class MainScene extends Phaser.Scene {
       },
     );
 
-    console.log(`[MainScene] Сцена создана. Размер: ${width}x${height}`);
+    console.log("[MainScene] Сцена создана. Модель данных инициализирована");
   }
 
   /**
